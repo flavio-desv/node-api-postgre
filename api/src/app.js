@@ -1,20 +1,14 @@
 // instanciando o Express
 const express = require('express');
 const cors = require('cors');
+const db = require('./database/connect');
+
 const app = express();
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.json({ type: 'application/vnd.api+json' }));
 app.use(cors());
-
-const pg = require('pg');
-
-var conString = "postgres://postgres:mouse@localhost:5432/geomodelo";
-
-// ==> Conexão com a Base de Dados:
-
-const client = new pg.Client(conString);
-client.connect();
 
 // Iniciando o express
 
@@ -31,19 +25,13 @@ app.get('/api/', (req, res) => {
 // Método Get
 getMarca = async (req, res) => {
   
-  const response = await client.query(
+  const response = await db.query(
     
-    "SELECT "+
-    "  id_marca," +
-    "  nm_marca, " +
-    "  fg_ativo, " +
-    "  extract( epoch from dt_inclusao ) as dt_inclusao, "+
-    "  extract( epoch from dt_alteracao ) as dt_alteracao "+
-    "FROM " +
-    "  marca"
+    "SELECT * FROM marca order by id_marca"
+    
   );
   res.status(200).send(response.rows);
-
+  
 };
 
 updateMarca = async (req, res) => {
@@ -51,7 +39,7 @@ updateMarca = async (req, res) => {
   const id_marca = parseInt(req.params.id);
   const { nm_marca, fg_ativo } = req.body;
  
-  const response = await client.query(
+  const response = await db.query(
     "UPDATE marca SET nm_marca = $1, fg_ativo = $2 WHERE id_marca = $3",
     [nm_marca, fg_ativo, id_marca]
   );
